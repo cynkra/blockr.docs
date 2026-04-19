@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Tom Select — Look &amp; Feel Demo</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
+
+<style>
+  :root {
+    --blockr-grey-50: #f9fafb;
+    --blockr-grey-100: #f3f4f6;
+    --blockr-grey-200: #e5e7eb;
+    --blockr-grey-400: #9ca3af;
+    --blockr-grey-500: #6b7280;
+    --blockr-grey-900: #111827;
+    --blockr-blue-600: #2563eb;
+    --blockr-font-size-base: 0.875rem;
+    --blockr-font-size-sm: 0.8125rem;
+    --blockr-radius: 8px;
+    --blockr-min-h: 42px;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: var(--blockr-font-size-base);
+    color: var(--blockr-grey-900);
+    background: #fff;
+    margin: 0;
+    padding: 32px;
+  }
+  h1 { font-size: 20px; margin: 0 0 6px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 28px 0 10px; color: var(--blockr-grey-500); }
+  p.hint { color: var(--blockr-grey-500); font-size: var(--blockr-font-size-sm); margin: 2px 0 14px; }
+  .cards { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; max-width: 900px; }
+  .card { padding: 14px 16px 18px; border: 1px solid var(--blockr-grey-200); border-radius: 10px; background: #fff; }
+  .card-label { font-size: 11px; font-weight: 600; letter-spacing: .4px; color: var(--blockr-grey-400); text-transform: uppercase; margin-bottom: 8px; }
+
+  /* ---------- Blockr-look restyle of Tom Select (scoped to .blockr-ts) ---------- */
+  .blockr-ts .ts-wrapper { font-size: var(--blockr-font-size-base); }
+  .blockr-ts .ts-control {
+    min-height: var(--blockr-min-h);
+    padding: 6px 12px;
+    border-radius: var(--blockr-radius);
+    border: 1px solid var(--blockr-grey-200);
+    background: var(--blockr-grey-50);
+    box-shadow: none;
+  }
+  .blockr-ts .ts-wrapper.focus .ts-control,
+  .blockr-ts .ts-control:focus-within {
+    border-color: var(--blockr-blue-600);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  }
+  /* Dropdown portaled to body — use unscoped selectors so styling applies
+     regardless of where the dropdown element lives in the DOM. */
+  .ts-dropdown {
+    border: 1px solid var(--blockr-grey-200);
+    border-radius: var(--blockr-radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    background: #fff;
+    margin-top: 4px;
+    font-family: inherit;
+    font-size: var(--blockr-font-size-base);
+    color: var(--blockr-grey-900);
+  }
+  .ts-dropdown .option { padding: 6px 12px; background: #fff; }
+  .ts-dropdown .active { background: var(--blockr-grey-100); color: var(--blockr-grey-900); }
+  .ts-dropdown .opt-label { color: var(--blockr-grey-500); font-size: var(--blockr-font-size-sm); margin-left: 8px; }
+  .ts-dropdown .optgroup-header {
+    font-size: 11px; font-weight: 600; letter-spacing: .4px;
+    color: var(--blockr-grey-400); text-transform: uppercase;
+    padding: 8px 12px 4px;
+    background: var(--blockr-grey-50);
+  }
+  .ts-dropdown-content { max-height: 260px; background: #fff; }
+  /* Tag chips in the input (still inside .blockr-ts) keep value-only */
+  .blockr-ts .item .opt-label { display: none; }
+  .blockr-ts .single .item .opt-label { display: inline; }
+
+  /* --- Rich two-line option (demo 6): matches Blockr.SelectRich layout --- */
+  .rich-opt { padding: 2px 0; }
+  .rich-opt__header { display: flex; align-items: center; gap: 8px; }
+  .rich-opt__name { font-weight: 600; color: var(--blockr-grey-900); }
+  .rich-opt__badge {
+    font-size: 10px; font-weight: 600; letter-spacing: .3px;
+    padding: 2px 6px; border-radius: 4px;
+    background: var(--blockr-grey-100);
+    color: var(--blockr-grey-500);
+    text-transform: uppercase;
+  }
+  .rich-opt__desc {
+    font-size: var(--blockr-font-size-sm);
+    color: var(--blockr-grey-500);
+    margin-top: 2px;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+</style>
+</head>
+<body>
+<h1>Tom Select — styled to blockr design system</h1>
+<p class="hint">Four live Tom Select instances with the same CSS variables the blockr components use. Each demonstrates a feature we don't have in <code>Blockr.Select</code> today.</p>
+
+<div class="cards">
+
+  <div class="card blockr-ts">
+    <div class="card-label">1. Single + secondary label (ADaM-style)</div>
+    <select id="s1" placeholder="Pick a table…"></select>
+    <p class="hint">What dm_pull_block does today — identical UX, with richer label support.</p>
+  </div>
+
+  <div class="card blockr-ts">
+    <div class="card-label">2. Multi-select + drag-to-reorder</div>
+    <select id="s2" multiple placeholder="Pick columns…"></select>
+    <p class="hint">Matches <code>Blockr.Select.multi</code> with reorderable tags.</p>
+  </div>
+
+  <div class="card blockr-ts">
+    <div class="card-label">3. Grouped options (by source table)</div>
+    <select id="s3" placeholder="Pick column…"></select>
+    <p class="hint">Can't do this in <code>Blockr.Select</code> today. One of the triggers in ADR-0001.</p>
+  </div>
+
+  <div class="card blockr-ts">
+    <div class="card-label">4. Creatable tags</div>
+    <select id="s4" multiple placeholder="Type a new value and press Enter…"></select>
+    <p class="hint">User types a value → it becomes a tag. Common filter/crossfilter request.</p>
+  </div>
+
+  <div class="card blockr-ts" style="grid-column: 1 / -1;">
+    <div class="card-label">5. Virtualized: 10 000 options, smooth search + scroll</div>
+    <select id="s5" placeholder="Search 10 000 tickers…"></select>
+    <p class="hint">The ticker-catalog use case. Hand-rolled virtualization would be non-trivial; this is a plugin in Tom Select.</p>
+  </div>
+
+  <div class="card blockr-ts" style="grid-column: 1 / -1;">
+    <div class="card-label">6. Rich two-line options with category badges (matches blockr.seasonal)</div>
+    <select id="s6" placeholder="Pick a seasonal argument…"></select>
+    <p class="hint">Same structure as <code>Blockr.SelectRich</code>: bold name + category pill on the right + description line below. Tom Select's <code>render.option</code> callback returns arbitrary HTML.</p>
+  </div>
+
+</div>
+
+<script>
+// --- Sample data ---------------------------------------------------------
+const tables = [
+  { value: 'adsl', text: 'adsl', label: 'Subject Level Analysis' },
+  { value: 'adae', text: 'adae', label: 'Adverse Events Analysis' },
+  { value: 'adlb', text: 'adlb', label: 'Laboratory Analysis' },
+  { value: 'advs', text: 'advs', label: 'Vital Signs Analysis' },
+  { value: 'adcm', text: 'adcm', label: 'Concomitant Medications Analysis' },
+  { value: 'adeg', text: 'adeg', label: 'Electrocardiogram Tests Analysis' },
+  { value: 'adex', text: 'adex', label: 'Exposure Analysis' }
+];
+
+const cols = [
+  { value: 'USUBJID', text: 'USUBJID', label: 'Unique Subject Identifier' },
+  { value: 'AGE',     text: 'AGE',     label: 'Age (years)' },
+  { value: 'SEX',     text: 'SEX',     label: 'Sex' },
+  { value: 'RACE',    text: 'RACE',    label: 'Race' },
+  { value: 'ARM',     text: 'ARM',     label: 'Description of Planned Arm' },
+  { value: 'TRT01A',  text: 'TRT01A',  label: 'Actual Treatment for Period 1' }
+];
+
+// Grouped
+const grouped = [
+  { value: 'adsl.USUBJID', text: 'USUBJID', label: 'Unique Subject Identifier', optgroup: 'adsl' },
+  { value: 'adsl.AGE',     text: 'AGE',     label: 'Age', optgroup: 'adsl' },
+  { value: 'adsl.SEX',     text: 'SEX',     label: 'Sex', optgroup: 'adsl' },
+  { value: 'adae.AETERM',  text: 'AETERM',  label: 'Adverse Event Term', optgroup: 'adae' },
+  { value: 'adae.AESEV',   text: 'AESEV',   label: 'Severity',           optgroup: 'adae' },
+  { value: 'adlb.PARAMCD', text: 'PARAMCD', label: 'Parameter Code',     optgroup: 'adlb' },
+  { value: 'adlb.AVAL',    text: 'AVAL',    label: 'Analysis Value',     optgroup: 'adlb' }
+];
+const groups = [
+  { value: 'adsl', label: 'ADSL — Subject Level' },
+  { value: 'adae', label: 'ADAE — Adverse Events' },
+  { value: 'adlb', label: 'ADLB — Laboratory' }
+];
+
+// 10k tickers
+const tickers = [];
+const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+for (let i = 0; i < 10000; i++) {
+  const a = letters[Math.floor(Math.random()*26)];
+  const b = letters[Math.floor(Math.random()*26)];
+  const c = letters[Math.floor(Math.random()*26)];
+  const d = letters[Math.floor(Math.random()*26)];
+  tickers.push({ value: a+b+c+d+i, text: a+b+c+d, label: 'Instrument #'+i });
+}
+
+// --- Render callback (matches .blockr-select__opt-label pattern) ---------
+const renderLabel = {
+  option: function(data, escape) {
+    return '<div class="option"><span>' + escape(data.text) + '</span>' +
+           (data.label ? '<span class="opt-label">' + escape(data.label) + '</span>' : '') +
+           '</div>';
+  },
+  item: function(data, escape) {
+    return '<div class="item"><span>' + escape(data.text) + '</span>' +
+           (data.label ? '<span class="opt-label">' + escape(data.label) + '</span>' : '') +
+           '</div>';
+  }
+};
+
+// --- Instantiate ---------------------------------------------------------
+new TomSelect('#s1', {
+  options: tables,
+  render: renderLabel,
+  maxItems: 1,
+  wrapperClass: 'single',
+  dropdownParent: 'body'
+});
+
+new TomSelect('#s2', {
+  options: cols,
+  render: renderLabel,
+  plugins: ['remove_button', 'drag_drop'],
+  dropdownParent: 'body'
+});
+
+new TomSelect('#s3', {
+  options: grouped,
+  optgroups: groups,
+  optgroupField: 'optgroup',
+  labelField: 'text',
+  searchField: ['text', 'label'],
+  render: renderLabel,
+  maxItems: 1,
+  wrapperClass: 'single',
+  dropdownParent: 'body'
+});
+
+new TomSelect('#s4', {
+  options: [{value:'Grade 3', text:'Grade 3'},{value:'Serious', text:'Serious'}],
+  create: true,
+  plugins: ['remove_button'],
+  dropdownParent: 'body'
+});
+
+new TomSelect('#s5', {
+  options: tickers,
+  render: renderLabel,
+  searchField: ['text', 'label'],
+  maxItems: 1,
+  wrapperClass: 'single',
+  maxOptions: 50,  // virtual rendering: only ever 50 at a time
+  dropdownParent: 'body'
+});
+
+// --- Seasonal-style rich options ---
+const seasArgs = [
+  { value: 'transform.power',       name: 'transform.power',       category: 'transform', description: 'Box-Cox power transformation parameter' },
+  { value: 'transform.type',        name: 'transform.type',        category: 'transform', description: 'Type of prior-adjustment factors (permanent vs temporary)' },
+  { value: 'x11.appendbcst',        name: 'x11.appendbcst',        category: 'x11',       description: 'Include backcasts in X-11 output tables' },
+  { value: 'x11.appendfcst',        name: 'x11.appendfcst',        category: 'x11',       description: 'Include forecasts in X-11 output tables' },
+  { value: 'x11.calendarsigma',     name: 'x11.calendarsigma',     category: 'x11',       description: 'Compute standard errors for extreme value detection separately for each calendar month' },
+  { value: 'x11.centerseasonal',    name: 'x11.centerseasonal',    category: 'x11',       description: 'Center seasonal factors to combine with user-defined seasonal factors' },
+  { value: 'regression.aictest',    name: 'regression.aictest',    category: 'regression',description: 'Regressors to test for inclusion via AIC' },
+  { value: 'regression.user',       name: 'regression.user',       category: 'regression',description: 'User-defined regression variables' },
+  { value: 'arima.model',           name: 'arima.model',           category: 'arima',     description: 'Nonseasonal + seasonal ARIMA model specification' },
+  { value: 'forecast.maxlead',      name: 'forecast.maxlead',      category: 'forecast',  description: 'Maximum number of forecast periods' }
+];
+
+new TomSelect('#s6', {
+  options: seasArgs,
+  valueField: 'value',
+  labelField: 'name',
+  searchField: ['name', 'description'],
+  maxItems: 1,
+  dropdownParent: 'body',
+  render: {
+    option: (data, escape) => `
+      <div class="rich-opt">
+        <div class="rich-opt__header">
+          <span class="rich-opt__name">${escape(data.name)}</span>
+          <span class="rich-opt__badge">${escape(data.category)}</span>
+        </div>
+        <div class="rich-opt__desc">${escape(data.description)}</div>
+      </div>`,
+    item: (data, escape) => `<div><span class="rich-opt__name">${escape(data.name)}</span></div>`
+  }
+});
+
+// Open the first dropdown by default so the screenshot shows it
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    document.getElementById('s1').tomselect.open();
+  }, 200);
+});
+</script>
+</body>
+</html>
