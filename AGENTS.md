@@ -30,6 +30,7 @@ Each folder has a `README.md` that indexes its contents. Start there.
 | Write tests for a block | `testing/` (and the testing section of the relevant pattern doc) |
 | Understand a past decision | `decisions/README.md` |
 | Devcontainer / git quirks | `infra/` |
+| Install a Claude Code skill | `agents/skills/README.md` |
 
 ## Conventions
 
