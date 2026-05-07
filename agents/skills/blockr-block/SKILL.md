@@ -16,32 +16,50 @@ Add a new block to a blockr package the right way: pick a pattern, scaffold the 
 
 ## On invocation
 
-1. **Identify the package and block type.** If `$ARGUMENTS` doesn't make both clear, ask.
-2. **Pick the pattern.** Two options with different cost/UX trade-offs and different testing strategies. **Don't guess** — ask the user.
+1. **Identify the package, block type, and what the block does.** Ask only if unclear. Most prompts include the data source and the parameters — that's enough.
+2. **Pick the pattern.** Default to **R-driven** for new packages, simple blocks, and first-time block authors. Pick **JS-driven** only if the user explicitly asks for it, OR the target package's existing blocks are uniformly JS-driven. Don't ask the user unless the package signals are mixed.
+3. **Pick a constructor name.** Convention: `new_<readable_form>_block()`. Split compound package suffixes on logical word boundaries (`blockr.catfacts` → `new_cat_facts_block`, `blockr.dplyr` → multiple — one per verb). Tell the user the chosen name in your first message so they can flag it before you write code.
+4. **Scaffold + register + test + verify** as one unit. Registration is not optional — see "Scaffolding checklist" below.
 
-## Picking the pattern
+## Pattern reference
 
-Full chooser: `blockr.docs/patterns/README.md`. Short version:
+Full chooser: `blockr.docs/patterns/README.md`.
 
 - **R-driven** — pure-R Shiny module returning `expr` + `state`. Faster to write, easier to debug, `testServer()` is sufficient. Right for simple blocks, internal tools, prototypes, the on-ramp into the framework. Used by `blockr.core`'s built-ins.
 - **JS-driven** — custom JS class wired through a Shiny input binding. Materially better UX (multi-row builders, autocomplete, drag handles, instant client-side feedback). Used throughout `blockr.dplyr`. Reach for this when polish matters and stock Shiny inputs can't deliver.
-
-If the target package's existing blocks are uniformly one pattern, follow suit unless the user explicitly wants the other.
 
 ## R-driven path
 
 Reference: `blockr.docs/patterns/r-driven-blocks.md`.
 
-Scaffold:
+### Scaffolding checklist
 
-- `R/<name>_block.R` — constructor + server + UI in one file
-- `tests/testthat/test-<name>_block.R` — `testServer()`-based tests
+For an existing package, write/update:
+- `R/<name>_block.R` — constructor + server + UI in one file.
+- `R/zzz.R` — `.onLoad()` calling `blockr.core::register_blocks(ctor = ..., name = ..., description = ..., category = ..., package = pkgname)`. Always register; otherwise the constructor warns on every call.
+- `tests/testthat/test-<name>_block.R` — `testServer()`-based tests.
+- `DESCRIPTION` — add the block's runtime deps to `Imports`.
+- `NAMESPACE` — `importFrom(blockr.core, bbquote)` plus any roxygen-driven exports.
 
-The constructor returns `new_*_block()` (`new_transform_block`, `new_data_block`, etc.). The server returns `list(expr = reactive(...), state = list(...))`. **State names must match constructor argument names exactly** — serialization breaks silently otherwise.
+For a brand-new package, also create: `DESCRIPTION` (with `Imports: blockr.core, shiny` plus block deps), `NAMESPACE` (`export(new_<name>_block)`, `importFrom(blockr.core, bbquote)`), `.Rbuildignore`. The `category` for `register_blocks()` must be one of `blockr.core::suggested_categories()` — `input`, `transform`, `structured`, `plot`, `table`, `model`, `output`, `utility`, `uncategorized`. Data-fetching blocks are `input`, not `data`.
 
-Rules that bite:
-- Use `bquote()` for expression building, never `paste()` or string interpolation.
-- Don't expose data inputs (`data`, `x`, `y`, `...args`) as constructor arguments.
+### Construction rules
+
+The constructor returns `new_*_block()`. Pick the variant from what the block does:
+
+| Block does... | Variant | Server signature |
+|---|---|---|
+| Loads from API / file / database (no upstream) | `new_data_block()` | `function(id)` |
+| Reshapes one upstream input | `new_transform_block()` | `function(id, data)` |
+| Joins two upstream inputs | `new_join_block()` | `function(id, x, y)` |
+| Takes N upstream inputs | `new_variadic_block()` | `function(id, ...args)` |
+| Renders a plot | `new_plot_block()` | `function(id, data)` |
+
+The server returns `list(expr = reactive(...), state = list(...))`.
+
+- **State names must match constructor argument names** exactly and in count. Serialization breaks silently otherwise.
+- Use `blockr.core::bbquote()` (not base `bquote()`) for expression building, and set `expr_type = "bquoted"` on the parent constructor. Splice the data input via `.(data)`. Never use `paste()` or string interpolation.
+- Don't expose data inputs (`data`, `x`, `y`, `...args`) as constructor arguments — those are wired by the framework via the server signature.
 - Forward `...` to the parent constructor.
 
 ### Testing (R-driven)
@@ -83,7 +101,7 @@ Three tiers — `shinytest2` is necessary because `session$setInputs()` cannot d
 
 Once tests pass, verify the block runs end-to-end in a browser. Hand off to the **`blockr-playwright`** skill:
 
-- Launch the package's preview app (e.g. `dev/preview-all-blocks.R`, or a minimal `serve(new_<name>_block(), list(data = ...))` on port 3838).
+- Launch the package's preview app (e.g. `dev/preview-all-blocks.R`, or a minimal `shiny::runApp(blockr.core::serve(new_<name>_block(), list(data = ...)), port = 3838)`). Note: `serve()` itself doesn't accept `port` / `launch.browser` — it returns a `shinyApp` which `runApp()` then runs.
 - Screenshot the block in its empty state and after a typical interaction.
 - Check: UI renders without console errors, the block produces output downstream, the empty → configured transition is clean.
 
@@ -91,11 +109,12 @@ Tests passing isn't the same as the block working in a real Shiny session. Don't
 
 ## Don'ts
 
-- **Don't skip the pattern choice.** Silently defaulting wastes work later.
+- **Don't ask the user to pick the pattern when the answer is obvious.** New package, simple block, first-time author → R-driven. Default and tell them you defaulted; they can override.
+- **Don't skip registration.** Without `register_blocks()` every constructor call warns, and the block won't show up in board/AI/MCP discovery.
 - **Don't add `shinytest2` to an R-driven block.** `testServer()` covers it in milliseconds. The exception is visual regression on CSS, rarely worth the maintenance.
 - **Don't duplicate expression-building logic in the constructor.** Helpers go in `R/expr-builders.R` so they're unit-testable in isolation.
 - **Don't skip the Playwright verification.** Tests passing isn't the same as the block actually working.
 
 ## When you're done
 
-If the block is being registered for AI/MCP discovery, add a `register_blocks()` call — see js-driven-blocks.md "Registry" section. Update the package's pkgdown reference if needed.
+Tell the user the verification command — `pkgload::load_all("<pkg>")` then `shiny::runApp(blockr.core::serve(<your_constructor>()))` — so they can drop the block into a real session.

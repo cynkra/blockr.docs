@@ -10,7 +10,7 @@ For the full tutorial with worked examples, see `vignette("create-block", packag
 
 A block is a Shiny module that returns two things:
 
-- **`expr`** — a reactive yielding a quoted/`bquote`d expression. Defines the block's computation as code that can be evaluated outside any reactive context. This is what makes the pipeline reproducible and exportable.
+- **`expr`** — a reactive yielding a `bbquote()`d expression. Defines the block's computation as code that can be evaluated outside any reactive context. This is what makes the pipeline reproducible and exportable.
 - **`state`** — a list of reactives, one per constructor parameter. Drives serialization (save/restore) and external control of the block.
 
 A block is built from three pieces in a single constructor:
@@ -50,7 +50,7 @@ new_head_block <- function(n = 6L, ...) {
 
         list(
           expr = reactive(
-            bquote(utils::head(data, n = .(n)), list(n = n_rows()))
+            bbquote(utils::head(.(data), n = .(n)), list(n = n_rows()))
           ),
           state = list(n = n_rows)
         )
@@ -67,6 +67,7 @@ new_head_block <- function(n = 6L, ...) {
       )
     },
     class = "head_block",
+    expr_type = "bquoted",
     ...
   )
 }
@@ -77,7 +78,7 @@ new_head_block <- function(n = 6L, ...) {
 - **State names must match constructor argument names**, exactly and in count. Serialization breaks silently otherwise.
 - **Don't expose data inputs as constructor arguments**. `data` / `x` / `y` / `...args` are wired by the framework via the server signature.
 - **Forward `...`** to the parent constructor so framework-level options (`allow_empty_state`, `dat_val`, `class`, etc.) can be set by callers.
-- **Use `bquote()`** to splice reactive values into the expression — never `paste()` or string interpolation. The expression must be valid R code, not a string.
+- **Use `blockr.core::bbquote()`** (not base `bquote()`) to splice reactive values *and* the data input into the expression — never `paste()` or string interpolation. Pair it with `expr_type = "bquoted"` on the parent constructor. The expression must be valid R code, not a string.
 - **The expression must evaluate outside a reactive context**. If your `expr` only works because a reactive is in scope, the export pipeline will fail.
 
 ## Testing
@@ -154,4 +155,24 @@ The exception is JS-driven blocks, where `session$setInputs()` can't drive custo
 
 ## Registering the block
 
-Once the constructor works, register it so the board UI and the AI pipeline can discover it. See `vignette("blocks-registry", package = "blockr.core")`.
+Without a registration call, every constructor invocation emits `No block metadata available for block <name>_block.`. Register on package load:
+
+```r
+# R/zzz.R
+.onLoad <- function(libname, pkgname) {
+  blockr.core::register_blocks(
+    ctor = "new_cat_facts_block",
+    name = "cat facts block",
+    description = "Fetch cat facts from catfact.ninja",
+    category = "input",
+    package = pkgname
+  )
+}
+```
+
+Notes:
+- `register_blocks()` (plural) is the vectorised version — one call can register many blocks; `ctor`, `name`, `description`, `category` accept parallel character vectors.
+- `category` must be one of `blockr.core::suggested_categories()`: `input`, `transform`, `structured`, `plot`, `table`, `model`, `output`, `utility`, `uncategorized`. Anything else warns. Data-fetching blocks are `input`, not `data`.
+- Pass `package = pkgname` from `.onLoad` so blocks are namespaced to your package.
+
+Full reference: `vignette("blocks-registry", package = "blockr.core")`.
