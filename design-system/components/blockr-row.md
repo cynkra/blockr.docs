@@ -41,6 +41,8 @@ Rows typically have a fixed-width left column (150–160px) for the "key" (colum
 
 The popover wraps nested `Blockr.Select` instances in `.blockr-popover-select-wrap`, which overrides the transparent control to a bordered 38px control height inside the popover context. Focus/open states on the wrapped control still use the standard focus ring.
 
+For **what belongs in the popover and how its rows are laid out** (label on top, full-width control, muted help below), see [blockr-popover.md](./blockr-popover.md). That doc is the spec; this section is just the class list.
+
 ## Confirm button
 
 `.blockr-expr-confirm` — 24px confirm action for expression rows. `.confirmed` modifier when the expression matches the last-submitted value (turns green, `--blockr-color-primary` on hover off).

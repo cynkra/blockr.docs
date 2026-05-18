@@ -16,6 +16,7 @@ The canonical source lives in `blockr.dplyr/inst/` (`blockr-core.js`, `blockr-bl
 - [components/blockr-select.md](./components/blockr-select.md) — single + multi select (`Blockr.Select`).
 - [components/blockr-input.md](./components/blockr-input.md) — code input with autocomplete (`Blockr.Input`).
 - [components/blockr-row.md](./components/blockr-row.md) — shared row/pill/add-row layout primitives.
+- [components/blockr-popover.md](./components/blockr-popover.md) — gear "advanced settings" popover: what goes in it and how rows are laid out.
 
 ## Related
 

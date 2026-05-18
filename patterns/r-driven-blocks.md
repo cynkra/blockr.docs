@@ -107,7 +107,14 @@ There are two complementary patterns:
 
 Use this to verify that user inputs produce the right code, that state reacts correctly, and that `state` exposes the expected reactives.
 
+`bbquote()` leaves `.(data)` as a literal call in the returned expression — the framework's `wrap_expr()` substitutes it at evaluation time. In tests, do that step yourself with the helper below (same one used in `js-driven-blocks.md`):
+
 ```r
+eval_bquoted <- function(expr, df) {
+  resolved <- do.call(bquote, list(expr, list(data = as.name("data"))))
+  eval(resolved, envir = list(data = df))
+}
+
 test_that("head block builds correct expression", {
   blk <- new_head_block(n = 6L)
 
@@ -119,7 +126,7 @@ test_that("head block builds correct expression", {
       session$flushReact()
 
       expr_result <- session$returned$expr()
-      expect_equal(eval(expr_result, list(data = mtcars)), head(mtcars, 10))
+      expect_equal(eval_bquoted(expr_result, mtcars), head(mtcars, 10))
       expect_equal(session$returned$state$n(), 10L)
     }
   )
