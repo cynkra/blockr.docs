@@ -38,10 +38,11 @@ For an existing package, write/update:
 - `R/<name>_block.R` — constructor + server + UI in one file.
 - `R/zzz.R` — `.onLoad()` calling `blockr.core::register_blocks(ctor = ..., name = ..., description = ..., category = ..., package = pkgname)`. Always register; otherwise the constructor warns on every call.
 - `tests/testthat/test-<name>_block.R` — `testServer()`-based tests.
+- `app.R` — a runnable demo board at the package root (see "Board demo"). Add `^app\.R$` to `.Rbuildignore` so R CMD check stays clean.
 - `DESCRIPTION` — add the block's runtime deps to `Imports`.
 - `NAMESPACE` — `importFrom(blockr.core, bbquote)` plus any roxygen-driven exports.
 
-For a brand-new package, also create: `DESCRIPTION` (with `Imports: blockr.core, shiny` plus block deps), `NAMESPACE` (`export(new_<name>_block)`, `importFrom(blockr.core, bbquote)`), `.Rbuildignore`. The `category` for `register_blocks()` must be one of `blockr.core::suggested_categories()` — `input`, `transform`, `structured`, `plot`, `table`, `model`, `output`, `utility`, `uncategorized`. Data-fetching blocks are `input`, not `data`.
+For a brand-new package, also create: `DESCRIPTION` (with `Imports: blockr.core, shiny` plus block deps), `NAMESPACE` (`export(new_<name>_block)`, `importFrom(blockr.core, bbquote)`), `app.R` (the demo board), and `.Rbuildignore` (including `^app\.R$`). The `category` for `register_blocks()` must be one of `blockr.core::suggested_categories()` — `input`, `transform`, `structured`, `plot`, `table`, `model`, `output`, `utility`, `uncategorized`. Data-fetching blocks are `input`, not `data`.
 
 ### Construction rules
 
@@ -109,13 +110,20 @@ Tests passing isn't the same as the block working in a real Shiny session. Don't
 
 ### Board demo (multi-block)
 
-Serving the block alone with a static `data = ...` proves it renders, not that it behaves in a pipeline. Wire a small board so data actually flows through the block. Prefer a **dock board** with the DAG extension — that is how blockr is actually used: dockable panels, the block picker, and a live DAG view, so you can add and rewire blocks from the UI instead of only in code.
+Serving the block alone with a static `data = ...` proves it renders, not that it behaves in a pipeline. Write a runnable **`app.R` at the package root** so data actually flows through the block. Prefer a **dock board** with the DAG extension — that is how blockr is actually used: dockable panels, the block picker, and a live DAG view, so you can add and rewire blocks from the UI instead of only in code.
+
+**Launch it so the working directory is the package root.** Run `shiny::runApp("<path-to-package>")` (or RStudio's **Run App** on `app.R`). `runApp()` switches the working directory to the app's folder for the session, so `pkgload::load_all(".")` inside `app.R` loads *this* package no matter where you launched from. Don't `pkgload::load_all(".")` from a parent directory or a console whose working directory isn't the package root — it'll load the wrong directory and fail. The launch path is relative to the package, not your shell.
+
+**Don't install or reinstall anything for the demo.** Assume `blockr.core`, `blockr.dock`, `blockr.dag` and the package's deps are already installed; `library()` loads them and `load_all()` loads the package under development. Never run `install.packages()`, `pak::pak()`, `remotes::install_*()`, or `devtools::install()` here — that can clobber working versions with wrong ones. If a dependency is genuinely missing, tell the user and stop; don't silently install.
 
 **The board layout depends on the block's variant.** A data block is an entry point — it is the source, so don't add another data block. Transform/plot blocks need an upstream source. Pick the matching shape:
 
-Shared header for all variants:
+`app.R` header (all variants):
 
 ```r
+# Launch with shiny::runApp("<this package dir>") or RStudio Run App.
+# runApp sets the working directory to this folder, so load_all(".") loads
+# this package. Deps are assumed already installed — do not (re)install them.
 library(blockr.core)
 library(blockr.dock)   # dockable layout + block picker
 library(blockr.dag)    # DAG view extension
@@ -162,6 +170,8 @@ Then exercise the flow: for a data block, change its own inputs and confirm `out
 
 If `blockr.dock` / `blockr.dag` aren't available, fall back to a plain `blockr.core::new_board(blocks = ..., links = ...)` with the same per-variant wiring — no dock UI or DAG view, but the data still flows end to end.
 
+**Keep R CMD check clean.** A top-level `app.R` is a non-standard package file, so add `^app\.R$` to `.Rbuildignore`. The demo then stays out of the built tarball (no "non-standard top-level file" NOTE) while remaining runnable from the source tree. If you'd rather ship the demo with the package, put it at `inst/examples/app.R` instead and run it via `shiny::runApp(system.file("examples", package = "<pkg>"))` — `inst/` content doesn't need ignoring.
+
 ## Don'ts
 
 - **Don't ask the user to pick the pattern when the answer is obvious.** New package, simple block, first-time author → R-driven. Default and tell them you defaulted; they can override.
@@ -169,7 +179,9 @@ If `blockr.dock` / `blockr.dag` aren't available, fall back to a plain `blockr.c
 - **Don't add `shinytest2` to an R-driven block.** `testServer()` covers it in milliseconds. The exception is visual regression on CSS, rarely worth the maintenance.
 - **Don't duplicate expression-building logic in the constructor.** Helpers go in `R/expr-builders.R` so they're unit-testable in isolation.
 - **Don't skip the Playwright verification.** Tests passing isn't the same as the block actually working.
+- **Don't install or reinstall packages for the demo.** Deps are assumed preinstalled — `install.packages()` / `pak` / `remotes` can replace working versions with wrong ones. `library()` the deps, `load_all()` the package, and if something's missing, say so instead of installing.
+- **Don't `load_all(".")` from a parent directory.** Launch the demo with `shiny::runApp("<pkg>")` so the working directory is the package root; the path is relative to the package, not your shell.
 
 ## When you're done
 
-Tell the user the verification command — `pkgload::load_all("<pkg>")` then `shiny::runApp(blockr.core::serve(<your_constructor>()))` — so they can drop the block into a real session. For anything that consumes or produces upstream data, point them at the board demo above so they see it working in a real pipeline, not just in isolation.
+Tell the user how to run the demo — `shiny::runApp("<path-to-package>")` (or RStudio's **Run App** on `app.R`) — so they see the block working in a real pipeline, not just in isolation. Pass the package path so `runApp()` sets the working directory there; don't assume the shell is already inside the package. The single-block form `shiny::runApp(blockr.core::serve(<your_constructor>()))` (after `pkgload::load_all()` with the package loaded) is the quick check; the `app.R` board demo is the realistic one. Confirm `^app\.R$` is in `.Rbuildignore` so `R CMD check` stays clean, and that you didn't install or reinstall any packages to get here.
