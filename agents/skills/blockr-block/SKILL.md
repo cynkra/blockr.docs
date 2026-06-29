@@ -107,6 +107,37 @@ Once tests pass, verify the block runs end-to-end in a browser. Hand off to the 
 
 Tests passing isn't the same as the block working in a real Shiny session. Don't skip this step.
 
+### Board demo (multi-block)
+
+Serving the block alone with a static `data = ...` proves it renders, not that it behaves in a pipeline. Wire a small board so data actually flows through the block, using only `blockr.core` built-ins for the surrounding blocks:
+
+```r
+library(blockr.core)
+pkgload::load_all(".")
+
+serve(
+  new_board(
+    blocks = c(
+      data = new_dataset_block("iris"),   # upstream source
+      mine = new_<name>_block(),          # the block under test
+      out  = new_scatter_block()          # downstream consumer
+    ),
+    links = c(
+      new_link(from = "data", to = "mine", input = "data"),
+      new_link(from = "mine", to = "out",  input = "data")
+    )
+  )
+)
+```
+
+Adapt the wiring to the block variant:
+
+- **data block** — drop the upstream `data` block; make `mine` the source and link `mine -> out` (e.g. `new_head_block()`).
+- **transform / plot block** — source -> `mine` -> consumer, as above.
+- **join / variadic block** — two or more upstream `new_dataset_block()`s linked into `x`/`y` (or `...args`).
+
+Then edit the source block and confirm `mine` and `out` update. Reacting to upstream changes (not just its own inputs) is what catches broken link inputs and state-name mismatches that `testServer()` and single-block `serve()` both miss.
+
 ## Don'ts
 
 - **Don't ask the user to pick the pattern when the answer is obvious.** New package, simple block, first-time author → R-driven. Default and tell them you defaulted; they can override.
@@ -117,4 +148,4 @@ Tests passing isn't the same as the block working in a real Shiny session. Don't
 
 ## When you're done
 
-Tell the user the verification command — `pkgload::load_all("<pkg>")` then `shiny::runApp(blockr.core::serve(<your_constructor>()))` — so they can drop the block into a real session.
+Tell the user the verification command — `pkgload::load_all("<pkg>")` then `shiny::runApp(blockr.core::serve(<your_constructor>()))` — so they can drop the block into a real session. For anything that consumes or produces upstream data, point them at the board demo above so they see it working in a real pipeline, not just in isolation.
