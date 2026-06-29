@@ -109,14 +109,16 @@ Tests passing isn't the same as the block working in a real Shiny session. Don't
 
 ### Board demo (multi-block)
 
-Serving the block alone with a static `data = ...` proves it renders, not that it behaves in a pipeline. Wire a small board so data actually flows through the block, using only `blockr.core` built-ins for the surrounding blocks:
+Serving the block alone with a static `data = ...` proves it renders, not that it behaves in a pipeline. Wire a small board so data actually flows through the block. Prefer a **dock board** with the DAG extension — that is how blockr is actually used: dockable panels, the block picker, and a live DAG view, so you can add and rewire blocks from the UI instead of only in code.
 
 ```r
 library(blockr.core)
+library(blockr.dock)   # dockable layout + block picker
+library(blockr.dag)    # DAG view extension
 pkgload::load_all(".")
 
 serve(
-  new_board(
+  new_dock_board(
     blocks = c(
       data = new_dataset_block("iris"),   # upstream source
       mine = new_<name>_block(),          # the block under test
@@ -125,7 +127,8 @@ serve(
     links = c(
       new_link(from = "data", to = "mine", input = "data"),
       new_link(from = "mine", to = "out",  input = "data")
-    )
+    ),
+    extensions = new_dag_extension()
   )
 )
 ```
@@ -137,6 +140,8 @@ Adapt the wiring to the block variant:
 - **join / variadic block** — two or more upstream `new_dataset_block()`s linked into `x`/`y` (or `...args`).
 
 Then edit the source block and confirm `mine` and `out` update. Reacting to upstream changes (not just its own inputs) is what catches broken link inputs and state-name mismatches that `testServer()` and single-block `serve()` both miss.
+
+If `blockr.dock` / `blockr.dag` aren't available, fall back to a plain `blockr.core::new_board(blocks = ..., links = ...)` with the same wiring — no dock UI or DAG view, but the data still flows end to end.
 
 ## Don'ts
 
