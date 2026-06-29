@@ -111,18 +111,41 @@ Tests passing isn't the same as the block working in a real Shiny session. Don't
 
 Serving the block alone with a static `data = ...` proves it renders, not that it behaves in a pipeline. Wire a small board so data actually flows through the block. Prefer a **dock board** with the DAG extension — that is how blockr is actually used: dockable panels, the block picker, and a live DAG view, so you can add and rewire blocks from the UI instead of only in code.
 
+**The board layout depends on the block's variant.** A data block is an entry point — it is the source, so don't add another data block. Transform/plot blocks need an upstream source. Pick the matching shape:
+
+Shared header for all variants:
+
 ```r
 library(blockr.core)
 library(blockr.dock)   # dockable layout + block picker
 library(blockr.dag)    # DAG view extension
 pkgload::load_all(".")
+```
 
+**Data block (entry point — API / file / DB).** The block under test is the source; link it straight to a consumer so you can see what it returns. No upstream data block.
+
+```r
+serve(
+  new_dock_board(
+    blocks = c(
+      mine = new_<name>_block(),     # the block under test IS the source
+      out  = new_head_block()        # consumer, to view the data
+    ),
+    links = c(new_link(from = "mine", to = "out", input = "data")),
+    extensions = new_dag_extension()
+  )
+)
+```
+
+**Transform / plot block.** Needs an upstream source feeding it:
+
+```r
 serve(
   new_dock_board(
     blocks = c(
       data = new_dataset_block("iris"),   # upstream source
       mine = new_<name>_block(),          # the block under test
-      out  = new_scatter_block()          # downstream consumer
+      out  = new_scatter_block()          # downstream consumer (transform only)
     ),
     links = c(
       new_link(from = "data", to = "mine", input = "data"),
@@ -133,15 +156,11 @@ serve(
 )
 ```
 
-Adapt the wiring to the block variant:
+**Join / variadic block.** Two or more upstream `new_dataset_block()`s linked into `x`/`y` (or `...args`).
 
-- **data block** — drop the upstream `data` block; make `mine` the source and link `mine -> out` (e.g. `new_head_block()`).
-- **transform / plot block** — source -> `mine` -> consumer, as above.
-- **join / variadic block** — two or more upstream `new_dataset_block()`s linked into `x`/`y` (or `...args`).
+Then exercise the flow: for a data block, change its own inputs and confirm `out` updates; for the rest, edit the upstream source and confirm `mine` and its consumer update. Reacting to changes (not just rendering once) is what catches broken link inputs and state-name mismatches that `testServer()` and single-block `serve()` both miss.
 
-Then edit the source block and confirm `mine` and `out` update. Reacting to upstream changes (not just its own inputs) is what catches broken link inputs and state-name mismatches that `testServer()` and single-block `serve()` both miss.
-
-If `blockr.dock` / `blockr.dag` aren't available, fall back to a plain `blockr.core::new_board(blocks = ..., links = ...)` with the same wiring — no dock UI or DAG view, but the data still flows end to end.
+If `blockr.dock` / `blockr.dag` aren't available, fall back to a plain `blockr.core::new_board(blocks = ..., links = ...)` with the same per-variant wiring — no dock UI or DAG view, but the data still flows end to end.
 
 ## Don'ts
 
