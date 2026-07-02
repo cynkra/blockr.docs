@@ -100,17 +100,22 @@ Three tiers — `shinytest2` is necessary because `session$setInputs()` cannot d
 
 ## Verification
 
-Once tests pass, verify the block runs end-to-end in a browser. Hand off to the **`blockr-playwright`** skill:
+Once tests pass, verify the block runs end-to-end in a browser. **The verification artifact is the `app.R` board demo below** — a dock board with the DAG extension where data actually flows through the block. This is a required deliverable, not optional.
 
-- Launch the package's preview app (e.g. `dev/preview-all-blocks.R`, or a minimal `shiny::runApp(blockr.core::serve(new_<name>_block(), list(data = ...)), port = 3838)`). Note: `serve()` itself doesn't accept `port` / `launch.browser` — it returns a `shinyApp` which `runApp()` then runs.
+Do **not** verify by serving the block standalone (`serve(new_<name>_block())` or `serve(new_<name>_block(), list(data = ...))`). That only proves the UI renders in isolation; it exercises no links, no upstream data, and no state round-trip, so it hides exactly the bugs verification is meant to catch (broken link `input`s, state-name mismatches). Use it at most as a throwaway smoke test, never as the thing you hand back.
+
+Once `app.R` is written and launched, hand off to the **`blockr-playwright`** skill to drive the running app:
+
 - Screenshot the block in its empty state and after a typical interaction.
 - Check: UI renders without console errors, the block produces output downstream, the empty → configured transition is clean.
 
+> **`blockr-playwright` is not in this repo.** It ships from `cynkra/blockr.dev` at [`.claude/skills/blockr-playwright`](https://github.com/cynkra/blockr.dev/tree/align-workflow/.claude/skills/blockr-playwright) (end-to-end debugging of blockr Shiny apps via the Playwright MCP). Install it per `blockr.docs/agents/skills/README.md`. If it isn't installed, drive the running `app.R` manually with the `shiny-chromote-inspect` skill or `{chromote}` instead — but still verify against the board demo, not a standalone serve.
+
 Tests passing isn't the same as the block working in a real Shiny session. Don't skip this step.
 
-### Board demo (multi-block)
+### Board demo (multi-block) — the verification app
 
-Serving the block alone with a static `data = ...` proves it renders, not that it behaves in a pipeline. Write a runnable **`app.R` at the package root** so data actually flows through the block. Prefer a **dock board** with the DAG extension — that is how blockr is actually used: dockable panels, the block picker, and a live DAG view, so you can add and rewire blocks from the UI instead of only in code.
+Write a runnable **`app.R` at the package root** so data actually flows through the block. Use a **dock board** with the DAG extension — that is how blockr is actually used: dockable panels, the block picker, and a live DAG view, so you can add and rewire blocks from the UI instead of only in code. This `app.R` is the app you launch and hand to `blockr-playwright`; there is no separate standalone step.
 
 **Launch it so the working directory is the package root.** Run `shiny::runApp("<path-to-package>")` (or RStudio's **Run App** on `app.R`). `runApp()` switches the working directory to the app's folder for the session, so `pkgload::load_all(".")` inside `app.R` loads *this* package no matter where you launched from. Don't `pkgload::load_all(".")` from a parent directory or a console whose working directory isn't the package root — it'll load the wrong directory and fail. The launch path is relative to the package, not your shell.
 
@@ -184,4 +189,4 @@ If `blockr.dock` / `blockr.dag` aren't available, fall back to a plain `blockr.c
 
 ## When you're done
 
-Tell the user how to run the demo — `shiny::runApp("<path-to-package>")` (or RStudio's **Run App** on `app.R`) — so they see the block working in a real pipeline, not just in isolation. Pass the package path so `runApp()` sets the working directory there; don't assume the shell is already inside the package. The single-block form `shiny::runApp(blockr.core::serve(<your_constructor>()))` (after `pkgload::load_all()` with the package loaded) is the quick check; the `app.R` board demo is the realistic one. Confirm `^app\.R$` is in `.Rbuildignore` so `R CMD check` stays clean, and that you didn't install or reinstall any packages to get here.
+Tell the user how to run the demo — `shiny::runApp("<path-to-package>")` (or RStudio's **Run App** on `app.R`) — so they see the block working in a real pipeline, not just in isolation. Pass the package path so `runApp()` sets the working directory there; don't assume the shell is already inside the package. The `app.R` board demo (dock board + DAG extension) is the deliverable you hand back — not a standalone `serve(<your_constructor>())`. Confirm `^app\.R$` is in `.Rbuildignore` so `R CMD check` stays clean, and that you didn't install or reinstall any packages to get here.
