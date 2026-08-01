@@ -70,6 +70,13 @@ Weights: `500` (medium) for labels, `600` (semibold) for emphasised / confirmed 
 | **6px** | internal card sub-sections |
 | **4px** | pills, small buttons |
 
+Data marks (bars, boxes, swimlanes) use **2px**, and it means nothing — it is
+cosmetic. Clamp to `min(2px, thickness / 4)`, because a capsule (`height / 2`)
+is a *separate* signal meaning "this boundary is an estimate". Round the end a
+bar grows to; leave the end at zero square, since that is the axis. A stack
+tiles by construction, so its inner joins stay square and only the outermost
+segment rounds. A timeline does not tile, so intervals round both ends.
+
 ## Spacing + interaction
 
 - Row padding: 5px vertical.

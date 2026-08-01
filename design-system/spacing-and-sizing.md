@@ -35,6 +35,62 @@ band, which uses the standard tiers like everything else. See
 | `--blockr-radius-md` | **6px** | internal card sub-sections (separate, bind-rows, pivot-longer, unite) |
 | `--blockr-radius-sm` | **4px** | pills, small buttons |
 
+### Data marks
+
+A bar, a box or a swimlane segment is not chrome, and rounding it answers to a
+different rule. There are **two** radii on data marks and confusing them is the
+mistake to avoid:
+
+| | Value | Meaning |
+|---|---|---|
+| `--blockr-mark-radius` | **2px** | **Nothing.** Cosmetic. Keeps a mark from reading as a raw div. |
+| capsule | `height / 2`, written `999px` | **"This boundary is an estimate."** The point-range fence and inner range. |
+
+Keeping them apart is what makes the second one legible, so the cosmetic radius
+must never approach half a mark's thickness. Clamp it as
+`min(2px, thickness / 4)` wherever thickness is computed at render time — a
+3px-tall bar with a flat 2px radius is a capsule by accident, and now claims
+something about the data.
+
+Two rules for the cosmetic radius:
+
+**It applies to the silhouette, never to sub-marks.** A median tick, a fence cap
+and a whisker are 1–2px; a radius turns them into dots.
+
+**An end stays square if it sits on an axis, or if it abuts a sibling by
+construction.** A bar grows from zero to its value: the value end is a
+measurement and rounds, the zero end is the axis, shared by every bar in the
+column, and rounding it lifts the bar off its baseline.
+
+The abutment half of that is about *construction*, not about the mark type, and
+the distinction that matters is **stacks versus timelines**:
+
+- A **stack tiles by construction** — segments always share edges, because that
+  is what stacking means, and they compose one quantity. A seam between them
+  would read as a gap in that quantity. Inner joins stay square; only the
+  outermost segment has a value end.
+- A **timeline does not tile.** Its segments are per-event intervals that
+  overlap, leave gaps, or only incidentally touch. Where two of them do touch,
+  the seam is *true*: two events, not one long one. Both ends round.
+
+| Mark | Ends | Why |
+|---|---|---|
+| Bar, value end | round | free end, a measurement |
+| Bar, zero end | square | the axis |
+| Stack, inner joins | square | tiles by construction |
+| Diverging bar | round away from the tick | zero is in the middle, so neither rail end is an axis |
+| Box / IQR body | round both | free-standing, neither end on an axis |
+| Interval, swimlane, gantt | round both | a timeline is not a stack |
+| Heatmap cell | round | separated by its border, so it abuts nothing |
+| Ticks, caps, whiskers | square | too thin to carry a radius |
+
+The token is CSS, but two renderers cannot reach it: echarts bars set
+`itemStyle.borderRadius`, and custom `renderItem` marks are JS strings built in
+R. Both mirror the value as a constant and carry a `CANONICAL SOURCE:` comment.
+A stacked bar's value end also has to be set **per datum** rather than per
+series, because which segment is outermost varies by group when a category is
+missing.
+
 ## Gaps and padding
 
 - Row padding: 5px vertical, flex gap 6–12px between fields.
