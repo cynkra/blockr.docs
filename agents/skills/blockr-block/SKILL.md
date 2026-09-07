@@ -29,6 +29,11 @@ Full chooser: `blockr.docs/patterns/README.md`.
 - **R-driven** — pure-R Shiny module returning `expr` + `state`. Faster to write, easier to debug, `testServer()` is sufficient. Right for simple blocks, internal tools, prototypes, the on-ramp into the framework. Used by `blockr.core`'s built-ins.
 - **JS-driven** — custom JS class wired through a Shiny input binding. Materially better UX (multi-row builders, autocomplete, drag handles, instant client-side feedback). Used throughout `blockr.dplyr`. Reach for this when polish matters and stock Shiny inputs can't deliver.
 
+Both of those are about a block's **inputs**. When the block's *result* is a
+custom visual you also write, that is an htmlwidget behind
+`block_output()` / `block_ui()` rather than an input binding — see the
+[`blockr-htmlwidget`](../blockr-htmlwidget/) skill.
+
 ## R-driven path
 
 Reference: `blockr.docs/patterns/r-driven-blocks.md`.
