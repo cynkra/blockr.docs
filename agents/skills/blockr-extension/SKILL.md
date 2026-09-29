@@ -2,23 +2,22 @@
 name: blockr-extension
 description: |
   Use when writing a blockr.dock extension: a dock panel whose server sees
-  the whole board, such as a DAG view, an assistant, an inspector or an
-  entity profile. Covers deciding between a block and an extension, the
+  the whole board, such as a DAG view, an assistant, an inspector or a
+  control bridge. Covers deciding between a block and an extension, the
   constructor and server contract, reading block results, keeping off-screen
   blocks evaluated, changing the board through `update`, external control,
-  letting a block drive the extension, layout, tests and verification in a
-  real board. Trigger on phrases like "create an extension", "write a dock
-  extension", "this should be an extension, not a block", "a panel that
-  reads other blocks", "new_dock_extension".
+  a block driving another block, layout, tests and verification in a real
+  board. Trigger on phrases like "create an extension", "write a dock
+  extension", "should this be an extension or a block", "a panel that
+  changes the board", "new_dock_extension".
 argument-hint: "[extension name] [package]"
 ---
 
 # blockr-extension
 
-An extension is a dock panel with a server that receives the board. A block
-is a step in the pipeline: it returns code and other blocks build on its
-result. An extension is a view of the board or a control over it, and
-nothing links to it.
+An extension is a dock panel with a server that receives the board: every
+block, link and result, plus `update`, which can add, remove and relink
+blocks and set any block's state. A block server receives only its inputs.
 
 Checked against blockr.dock 0.1.3.9000 and blockr.core 0.1.4. Read
 `?blockr.dock::new_dock_extension` in the installed version before relying
@@ -26,19 +25,32 @@ on a detail here.
 
 ## Block or extension?
 
-Write an extension when any of these hold. Two or more and it is not a
-close call.
+**A block computes from its inputs, however rich its view. An extension
+acts on the board.** Board access is a privilege: give it only to what needs
+it.
 
-| sign | what it looks like in a block |
+| it needs to... | write |
 |---|---|
-| the result is not the product | the expr is `identity(data)` or a filter nobody downstream reads |
-| it hides its own output | a `block_output()` method that returns an empty or hidden tag |
-| it needs the board | it reads board options, or looks up other blocks by class or id |
-| it reads several blocks | it has inputs only so it can display them, not transform them |
-| it wants to stay put | the layout pins it in a rail next to other extensions |
+| read linked data and show it, however elaborate the view | a block |
+| hand its result to other blocks | a block |
+| read the board's structure: which blocks and links exist, the layout | an extension |
+| add, remove or relink blocks | an extension |
+| set another component's state on the user's behalf | an extension (or reuse `blockr.viz::new_ctrl_bridge_extension()`) |
 
-Stay with a block when other blocks need its result, or when the board
-should save and replay what it computes.
+A profile, a dashboard card or a report is a block, even with a sidebar and
+stacked charts: link its data in, return something useful (the selected
+entity's rows, for instance), draw the rest in its UI. A DAG view, an
+assistant, a board inspector or a control bridge is an extension.
+
+Signs you picked wrong:
+
+- A block that reads board options or looks other blocks up by class to get
+  its data: link the data in instead.
+- A block whose only way to change another block is a workaround: use the
+  control channel (`blockr.viz::ctrl_send()` plus the bridge extension)
+  rather than turning it into an extension.
+- An extension that only reads two blocks' results and draws them: it has
+  board write access it never uses. Make it a block with those two inputs.
 
 ## On invocation
 
@@ -145,7 +157,7 @@ result_of <- function(blk) {
 
   ```r
   update(list(sustain = stats::setNames(
-    list(list(set = c("riders", "streams"))), session$ns("sources")
+    list(list(set = c("a", "b"))), session$ns("sources")
   )))
   ```
 
@@ -161,9 +173,11 @@ result_of <- function(blk) {
 ```r
 update(list(blocks = list(add = blocks(h = new_head_block()), rm = "a")))
 update(list(links = list(add = links(ab = new_link("a", "b")), rm = "cd")))
-update(list(extensions = list(mod = list(profile = list(rider = 23L)))))
+update(list(blocks = list(mod = list(a = list(n = 10L)))))
 ```
 
+- `blocks$mod` only sets arguments the target block declares in its
+  `external_ctrl`; anything else is rejected.
 - Updates apply on a later flush. React to `board$board` or
   `board$last_update`, not to the value you just wrote.
 - `blockr.core::validate_board_update(delta, board)` errors early if you
@@ -176,60 +190,47 @@ must be a formal of the constructor, and the server must return it as a
 `reactiveVal` in `state`:
 
 ```r
-new_profile_extension <- function(rider = NULL, ...) {
+new_inspect_extension <- function(selected = NULL, ...) {
   blockr.dock::new_dock_extension(
-    server = profile_server(rider),
-    ui = profile_ui,
-    name = "Profile",
-    class = "profile_extension",
-    external_ctrl = "rider",
+    server = inspect_server(selected),
+    ui = inspect_ui,
+    name = "Inspect",
+    class = "inspect_extension",
+    external_ctrl = "selected",
     ...
   )
 }
 
-profile_server <- function(rider) {
-  force(rider)
+inspect_server <- function(selected) {
+  force(selected)
   function(id, board, update, ...) {
     moduleServer(id, function(input, output, session) {
-      r_rider <- reactiveVal(rider)
+      r_selected <- reactiveVal(selected)
       # ...
-      list(state = list(rider = r_rider))
+      list(state = list(selected = r_selected))
     })
   }
 }
 ```
 
 The board then writes it through
-`update(list(extensions = list(mod = list(<key> = list(rider = 23L)))))`.
-That path is validated, the value is saved with the board, and the
-assistant can set it too. Never write the `reactiveVal` from outside.
+`update(list(extensions = list(mod = list(inspect = list(selected = "a")))))`,
+from another extension or from the assistant. That path is validated and the
+value is saved with the board. Never write the `reactiveVal` from outside.
 
-## Letting a block drive the extension
+## A block driving another block
 
-A block server gets `(id, data)`, never `update`, so it cannot write that
-delta itself. The extension leaves a sender where the block can find it:
+A block server gets `(id, data)`, never `update`, so it cannot change
+another block directly. Give the target block `external_ctrl` names, add
+`blockr.viz::new_ctrl_bridge_extension()` to the board, and send from the
+source block:
 
 ```r
-# in the extension server
-key <- sub("^ext_", "", id)
-ctrl <- session$userData$blockr_ext_ctrl
-if (is.null(ctrl)) {
-  ctrl <- new.env(parent = emptyenv())
-  session$userData$blockr_ext_ctrl <- ctrl
-}
-ctrl[[key]] <- function(...) {
-  update(list(extensions = list(mod = stats::setNames(list(list(...)), key))))
-}
-
-# in the block server, e.g. on a click
-to_ext <- session$userData$blockr_ext_ctrl[[target]]
-if (is.function(to_ext)) to_ext(rider = bib)
+blockr.viz::ctrl_send(target, rider = 23L, at = "16:30:00")
 ```
 
-The block takes the extension key as a parameter (`ctrl_target`), so
-nothing is hard-coded. For one block driving another block, use
-`blockr.viz::ctrl_send()` with `blockr.viz::new_ctrl_bridge_extension()` on
-the board instead.
+The bridge is an extension precisely because it needs `update`; everything
+else stays a block. Board access then lives in one small, auditable place.
 
 ## Layout
 
@@ -289,8 +290,8 @@ missing, say so and stop.
 
 ## Don'ts
 
-- **Don't turn a view into a block** to reach the board. If the block needs
-  a hidden output or a pass-through expr, it is an extension.
+- **Don't make a view an extension** to read data. Link the data into a
+  block; an extension gets write access to the whole board.
 - **Don't read `board$blocks` at init**, and don't assume a block's result
   exists because the block does.
 - **Don't write another component's `reactiveVal`.** Go through `update`.
