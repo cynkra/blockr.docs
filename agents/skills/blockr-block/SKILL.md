@@ -34,6 +34,10 @@ custom visual you also write, that is an htmlwidget behind
 `block_output()` / `block_ui()` rather than an input binding — see the
 [`blockr-htmlwidget`](../blockr-htmlwidget/) skill.
 
+If the "block" would return its input unchanged, hide its own output, or need
+to read other blocks or board options, it is not a block. Write an extension
+instead: see the [`blockr-extension`](../blockr-extension/) skill.
+
 ## R-driven path
 
 Reference: `blockr.docs/patterns/r-driven-blocks.md`.
