@@ -34,6 +34,11 @@ custom visual you also write, that is an htmlwidget behind
 `block_output()` / `block_ui()` rather than an input binding — see the
 [`blockr-htmlwidget`](../blockr-htmlwidget/) skill.
 
+A rich view (a sidebar, stacked charts, an entity picker) is still a block
+when it computes from linked inputs. Only when it has to act on the board,
+adding, removing or relinking blocks, is it an extension: see the
+[`blockr-extension`](../blockr-extension/) skill.
+
 ## R-driven path
 
 Reference: `blockr.docs/patterns/r-driven-blocks.md`.
