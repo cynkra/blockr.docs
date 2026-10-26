@@ -168,7 +168,7 @@ The `.(data)` placeholder is resolved by `blockr.core`'s `eval_impl` at evaluati
 - `Blockr.Input.create(container, config)` — code input with autocomplete
 - `Blockr.icons` — SVG strings; `Blockr.onDocClick` — leak-safe document clicks
 
-Config and handle types — including the `setOptions` (reconciles selection) vs `updateOptions` (preserves selection, for lazy loading) distinction and the `maxRendered` cap — are documented in `types.d.ts`. Component specs: [../design-system/components/](../design-system/components/).
+Config and handle types — including the `setOptions` (reconciles selection) vs `updateOptions` (preserves selection, for lazy loading) distinction and the `maxRendered` cap — are documented in `types.d.ts`. How the components look and behave: [Controls](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html#controls) in blockr.ui's design system.
 
 ## Shared CSS classes
 
