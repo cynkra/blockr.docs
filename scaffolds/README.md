@@ -20,6 +20,15 @@ point is that an agent's job is never "invent a valid block from scratch" —
 it is "keep this green while turning myplot into the block you actually
 want."
 
+## Install
+
+Both scaffolds need blockr.core, blockr.dock and blockr.dag; jsblock also
+needs blockr.dplyr. The blockr package installs all of them:
+
+```r
+pak::pak("BristolMyersSquibb/blockr@dev")
+```
+
 ## What to edit, per scaffold
 
 - **The plot** lives in `R/expr-builders.R` (`make_myplot_expr()`) in both

@@ -47,9 +47,9 @@ level order lives in the data as factors. Reference consumers:
 the JS payload), `blockr.ggplot/R/scale-map.R` (injects literal
 `scale_*_manual()` into the block expr — exported code reproduces the shown
 colors; only complete assignments, since `scale_*_manual()` errors on
-gaps), `blockr.pharma/R/viz-ae-gantt.R` + `viz-patient-overview.R` (the
-patient-profile block resolves the AESEV binding once and injects it as
-`settings$sev_colors` into both vizs, so they cannot disagree).
+gaps). A block that draws several charts from one variable should resolve
+the binding once and hand the same colors to each chart, so they cannot
+disagree.
 The cross-renderer guarantee is the point: the same scale map drives echarts
 and ggplot to hex-identical colors, so a level does not change appearance when
 a view switches renderer.
@@ -57,14 +57,14 @@ a view switches renderer.
 ## Authoring (template/study side)
 
 Writers and the sidebar editor live in blockr.theme; clinical defaults are
-*template content* in blockr.cdex (`cedx_scale_map()`), serialized into each
+*template content* in the app's template package, serialized into each
 study's board file and amended per study (deck edit, not a package change):
 
 ```r
 options = c(
   dock_board_options(),
   new_board_options(new_scale_map_option(new_scale_map(
-    cedx_scale_map(),                       # template catalog
+    template_scale_map(),                   # template catalog
     scale_binding("TRT", color = c(Placebo = "#6D8196", ...))  # study delta
   )))
 )

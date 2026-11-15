@@ -25,9 +25,9 @@ Suggests:
     shinytest2,
     testthat (>= 3.0.0)
 Remotes:
-    cynkra/blockr.core,
+    BristolMyersSquibb/blockr.core,
     BristolMyersSquibb/blockr.dplyr,
-    cynkra/blockr.dock,
-    cynkra/blockr.dag
+    BristolMyersSquibb/blockr.dock,
+    BristolMyersSquibb/blockr.dag
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2

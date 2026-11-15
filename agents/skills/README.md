@@ -38,9 +38,3 @@ Whichever you use, verify against the **board demo** (`app.R` in the scaffold),
 not a standalone `shiny::runApp()` of the block on its own. A block that works
 in isolation and breaks in a board is the common failure, and only the board
 catches it.
-
-## Coming later
-
-- **blockr-workflow** — drives the dashboard-building workflow (discover → add
-  → configure → serve), currently shipped by `blockr.mcp::install_skill()`.
-  Deferred until `blockr.mcp` is restructured around live Shiny app control.
