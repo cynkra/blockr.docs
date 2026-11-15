@@ -63,8 +63,8 @@ The constructor returns `new_*_block()`. Pick the variant from what the block do
 |---|---|---|
 | Loads from API / file / database (no upstream) | `new_data_block()` | `function(id)` |
 | Reshapes one upstream input | `new_transform_block()` | `function(id, data)` |
-| Joins two upstream inputs | `new_join_block()` | `function(id, x, y)` |
-| Takes N upstream inputs | `new_variadic_block()` | `function(id, ...args)` |
+| Joins two upstream inputs | `new_transform_block()` | `function(id, x, y)` |
+| Takes N upstream inputs | `new_transform_block()` | `function(id, ...args)` |
 | Renders a plot | `new_plot_block()` | `function(id, data)` |
 
 The server returns `list(expr = reactive(...), state = list(...))`.
@@ -140,7 +140,7 @@ Write a runnable **`app.R` at the package root** so data actually flows through 
 
 **Launch it so the working directory is the package root.** Run `shiny::runApp("<path-to-package>")` (or RStudio's **Run App** on `app.R`). `runApp()` switches the working directory to the app's folder for the session, so `pkgload::load_all(".")` inside `app.R` loads *this* package no matter where you launched from. Don't `pkgload::load_all(".")` from a parent directory or a console whose working directory isn't the package root — it'll load the wrong directory and fail. The launch path is relative to the package, not your shell.
 
-**Don't install or reinstall anything for the demo.** Assume `blockr.core`, `blockr.dock`, `blockr.dag` and the package's deps are already installed; `library()` loads them and `load_all()` loads the package under development. Never run `install.packages()`, `pak::pak()`, `remotes::install_*()`, or `devtools::install()` here — that can clobber working versions with wrong ones. If a dependency is genuinely missing, tell the user and stop; don't silently install.
+**Don't install or reinstall anything for the demo.** Assume `blockr.core`, `blockr.dock`, `blockr.dag` and the package's deps are already installed; `library()` loads them and `load_all()` loads the package under development. Never run `install.packages()`, `pak::pak()`, `remotes::install_*()`, or `devtools::install()` here — that can clobber working versions with wrong ones. If a dependency is genuinely missing, tell the user and stop; don't silently install. Point them to `pak::pak("BristolMyersSquibb/blockr@dev")`, which installs blockr.core, blockr.dock, blockr.dag and blockr.dplyr.
 
 **The board layout depends on the block's variant.** A data block is an entry point — it is the source, so don't add another data block. Transform/plot blocks need an upstream source. Pick the matching shape:
 

@@ -1,8 +1,9 @@
 # blockr.docs
 
 How blockr is put together, and how to build with it. Shared developer
-documentation for the whole ecosystem: design system, block-building patterns,
-starter packages, architectural decisions.
+documentation for the whole ecosystem: block-building patterns, starter
+packages, architectural decisions. The design system lives in
+[blockr.ui](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html).
 
 For what blockr *is* and how to use it, start at
 [blockr.site](https://blockr.site). This repo is for
@@ -16,9 +17,7 @@ people writing blockr code.
 |---|---|
 | Write your first block | [patterns/README.md](./patterns/README.md) — pick R-driven or JS-driven, then follow that guide |
 | Start a whole new block package | [scaffolds/](./scaffolds/) — copy `rblock/` or `jsblock/`, rename, morph. Both open with tests green |
-| Style a control so it looks native | [design-system/](./design-system/) — tokens, components, and the behavioural rules |
-| Know how a control should *behave* | [design-system/ux-principles.md](./design-system/ux-principles.md) — defaults, required-empty cues, what each label and hint is allowed to say |
-| Generate UI with an LLM | [design-system/design-system-prompt.md](./design-system/design-system-prompt.md) — the whole system as one paste-ready brief |
+| Style a control, or decide how it behaves | [The design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) in blockr.ui |
 | Understand why something is built the way it is | [decisions/](./decisions/) |
 | Install the Claude Code skills | [agents/skills/README.md](./agents/skills/README.md) |
 
@@ -41,7 +40,7 @@ Two things follow from that layering, and most of this repo is downstream of
 them:
 
 - **A block owns its own UI.** There is no framework rendering your controls
-  for you, which is why the [design system](./design-system/) is written down
+  for you, which is why the [design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) is written down
   rather than enforced by a component library.
 - **A block returns an expression, not a result.** Blocks build code; the board
   evaluates it. That is what makes a board serializable and exportable to a
@@ -69,7 +68,6 @@ last; situations get fixed and the doc rots.
 ```
 patterns/        "How we build X": R-driven vs JS-driven blocks, scale maps.
 scaffolds/       Copy-and-rename starter block packages, tests green.
-design-system/   Tokens, components, UX principles, the LLM brief.
 decisions/       Architecture decision records. Numbered, dated, immutable.
 agents/          Claude Code skills and prompt notes.
 ```

@@ -18,8 +18,8 @@ Suggests:
     blockr.dock,
     testthat (>= 3.0.0)
 Remotes:
-    cynkra/blockr.core,
-    cynkra/blockr.dock,
-    cynkra/blockr.dag
+    BristolMyersSquibb/blockr.core,
+    BristolMyersSquibb/blockr.dock,
+    BristolMyersSquibb/blockr.dag
 Config/testthat/edition: 3
 RoxygenNote: 7.3.2

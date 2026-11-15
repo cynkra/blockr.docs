@@ -17,7 +17,7 @@ These are two valid patterns, not a default and a fallback. The right choice dep
 
 - Faster to write, easier to debug, `testServer()` is sufficient to verify it.
 - Right for simple blocks, internal tools, prototypes, and anyone learning the framework.
-- `blockr.core`'s built-in blocks (`new_head_block()`, `new_select_block()`, `new_merge_block()`) follow this pattern.
+- `blockr.core`'s built-in blocks (`new_head_block()`, `new_subset_block()`, `new_merge_block()`) follow this pattern.
 
 **JS-driven** is what mature, user-facing blocks tend to become:
 

@@ -1,7 +1,8 @@
 # blockr.docs — Agent Primer
 
-Durable, reference-style documentation for the blockr ecosystem: design system,
-block-building patterns, starter packages, decision records.
+Durable, reference-style documentation for the blockr ecosystem: block-building
+patterns, starter packages, decision records. The design system lives in
+blockr.ui (`vignettes/articles/design-system.Rmd`).
 
 If something would still be true six months from now after the code has moved,
 it belongs here. Otherwise:
@@ -15,7 +16,6 @@ it belongs here. Otherwise:
 ```
 patterns/       "How we build X". README.md is the chooser.
 scaffolds/      Copy-and-rename starter block packages (rblock, jsblock), tests green.
-design-system/  Tokens, components, UX principles, the paste-ready LLM brief.
 decisions/      ADRs: numbered, dated, immutable. New ADR for any change of stance.
 agents/         Claude Code skills and prompt notes.
 ```
@@ -27,9 +27,7 @@ Each folder has a `README.md` that indexes its contents. Start there.
 | Task | File |
 |---|---|
 | Start a new block | `patterns/README.md` (chooser) → `r-driven-blocks.md` or `js-driven-blocks.md`; new package → copy from `scaffolds/` |
-| Style a UI element | `design-system/README.md`, then the specific primitive or component |
-| Decide how a control should behave | `design-system/ux-principles.md` — read before adding any control |
-| Generate UI with an LLM | `design-system/design-system-prompt.md` |
+| Style a UI element, or decide how a control behaves | blockr.ui, `vignettes/articles/design-system.Rmd` |
 | Write tests for a block | the testing section of the relevant `patterns/` guide, plus the scaffold's `tests/` |
 | Understand a past decision | `decisions/README.md` |
 | Install a Claude Code skill | `agents/skills/README.md` |
@@ -47,16 +45,3 @@ Each folder has a `README.md` that indexes its contents. Start there.
 - **Doc PRs travel with code PRs** that change the described pattern. Don't
   defer.
 - **ADRs are append-only** — see `decisions/README.md` for the format.
-
-## When you change the design system
-
-The design system is described in more than one place on purpose, and the
-copies have to agree:
-
-- `design-system/colors.md`, `typography.md`, `spacing-and-sizing.md` — the
-  token tables.
-- `design-system/design-system-prompt.md` — the same values, condensed for an
-  LLM. **Update it in the same commit**, or generated UI drifts from shipped
-  UI.
-- The CSS itself, where literal fallbacks (`var(--blockr-x, #literal)`) must
-  equal the token's value.

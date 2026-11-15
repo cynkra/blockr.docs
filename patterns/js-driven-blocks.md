@@ -9,7 +9,7 @@ Most of the pattern lives in two factories, so a new block is ~30 lines of R and
 - R: `new_js_transform_block()` in `blockr.dplyr/R/js-block.R` generates the server (state reactive, column push, bidirectional sync) and UI. Blocks with non-standard data arity compose the same pieces via `js_block_sync()` / `js_block_ui()` / `js_block_dep()`.
 - JS: `Blockr.registerBlock()` in `blockr.dplyr/inst/js/blockr-core.js` generates the input binding and message handlers.
 
-> **Where the factories live.** Today they are internal to `blockr.dplyr` — importing it gets you the exported dependency functions (`blockr_core_js_dep()`, `blockr_select_dep()`, …) and helpers, but NOT `new_js_transform_block()` / `js_block_sync()` / `js_block_ui()`. The plan is to move the shared JS/CSS layer (blockr-core.js, Blockr.Select, Blockr.Input, the factories, `types.d.ts`) to `blockr.ui` together with blockr.dock's assets. Until then, a new package should start from **`blockr.docs/scaffolds/jsblock`**: it vendors an adapted `R/js-block.R` (including a `new_js_plot_block()` variant) while loading all shared JS/CSS through the exported dependency functions, so nothing else gets copied. Keep the vendored file unedited so the eventual migration is a deletion.
+> **Where the factories live.** The shared controls (`Blockr.Select`, `Blockr.Input`) and their CSS ship in `blockr.ui` as `blockr.ui::controls_dep()`. The factories are still internal to `blockr.dplyr`: importing it gets you the exported dependency functions (`blockr_core_js_dep()`, which loads `blockr-core.js` on top of `controls_dep()`) and helpers, but NOT `new_js_transform_block()` / `js_block_sync()` / `js_block_ui()`. `blockr_select_dep()` and `blockr_input_dep()` still exist and now return the same thing as `blockr_core_js_dep()`. A new package should start from **`blockr.docs/scaffolds/jsblock`**: it vendors an adapted `R/js-block.R` (including a `new_js_plot_block()` variant) while loading all shared JS/CSS through the exported dependency functions, so nothing else gets copied. Keep the vendored file unedited so that moving the factories out of blockr.dplyr later is a deletion.
 
 ## Anatomy
 
@@ -168,31 +168,11 @@ The `.(data)` placeholder is resolved by `blockr.core`'s `eval_impl` at evaluati
 - `Blockr.Input.create(container, config)` — code input with autocomplete
 - `Blockr.icons` — SVG strings; `Blockr.onDocClick` — leak-safe document clicks
 
-Config and handle types — including the `setOptions` (reconciles selection) vs `updateOptions` (preserves selection, for lazy loading) distinction and the `maxRendered` cap — are documented in `types.d.ts`. Component specs: [../design-system/components/](../design-system/components/).
+Config and handle types — including the `setOptions` (reconciles selection) vs `updateOptions` (preserves selection, for lazy loading) distinction and the `maxRendered` cap — are documented in `types.d.ts`. How the components look and behave: [Controls](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html#controls) in blockr.ui's design system.
 
 ## Shared CSS classes
 
-| Class | Purpose |
-|---|---|
-| `.blockr-row` | Gray bordered row container (42px, flex) |
-| `.blockr-row-content` | Flex-filling content area inside row |
-| `.blockr-row-remove` | Remove button (hidden until row hover) |
-| `.blockr-pill` | Click-through toggle button |
-| `.blockr-add-row` | Footer bar with "Add" links |
-| `.blockr-add-link` | "+ Add something" text link |
-| `.blockr-add-link-expr` | Code icon button for adding expression rows |
-| `.blockr-expr-confirm` | Enter / checkmark confirm button |
-| `.blockr-num-input` | Number input inside rows |
-| `.blockr-text-input` | Standalone text input (42px, matches dock) |
-| `.blockr-label` | Input label (12px, 500 weight) |
-| `.blockr-select--bordered` | Add to standalone Blockr.Select for 42px bordered style |
-| `.blockr-gear-header` | Top-right gear icon container |
-| `.blockr-gear-btn` | Gear settings button |
-| `.blockr-settings` | Settings band — in flow under the gear header, not a floating panel |
-| `.blockr-settings__field` / `--full` | One field in the band's wrapping grid |
-| `.blockr-checkbox` | Plain on/off data option (not a self-labelling pill) |
-
-Row divider principle: the first "key" input in a row gets `border-right`; text separators (`=`, `→`, `of`) go between value-side elements.
+The row, pill, add-row, gear and settings-band classes ship with `blockr.ui::controls_dep()`. Which class to use for what: [the design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) in blockr.ui.
 
 ## Performance checklist
 
