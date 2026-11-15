@@ -5,7 +5,7 @@ documentation for the whole ecosystem: design system, block-building patterns,
 starter packages, architectural decisions.
 
 For what blockr *is* and how to use it, start at
-[blockr.site](https://blockr-org.github.io/blockr.site/). This repo is for
+[blockr.site](https://blockr.site). This repo is for
 people writing blockr code.
 
 **Agents / LLMs: read [AGENTS.md](./AGENTS.md) first.**
