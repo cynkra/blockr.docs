@@ -172,27 +172,7 @@ Config and handle types — including the `setOptions` (reconciles selection) vs
 
 ## Shared CSS classes
 
-| Class | Purpose |
-|---|---|
-| `.blockr-row` | Gray bordered row container (42px, flex) |
-| `.blockr-row-content` | Flex-filling content area inside row |
-| `.blockr-row-remove` | Remove button (hidden until row hover) |
-| `.blockr-pill` | Click-through toggle button |
-| `.blockr-add-row` | Footer bar with "Add" links |
-| `.blockr-add-link` | "+ Add something" text link |
-| `.blockr-add-link-expr` | Code icon button for adding expression rows |
-| `.blockr-expr-confirm` | Enter / checkmark confirm button |
-| `.blockr-num-input` | Number input inside rows |
-| `.blockr-text-input` | Standalone text input (42px, matches dock) |
-| `.blockr-label` | Input label (12px, 500 weight) |
-| `.blockr-select--bordered` | Add to standalone Blockr.Select for 42px bordered style |
-| `.blockr-gear-header` | Top-right gear icon container |
-| `.blockr-gear-btn` | Gear settings button |
-| `.blockr-settings` | Settings band — in flow under the gear header, not a floating panel |
-| `.blockr-settings__field` / `--full` | One field in the band's wrapping grid |
-| `.blockr-checkbox` | Plain on/off data option (not a self-labelling pill) |
-
-Row divider principle: the first "key" input in a row gets `border-right`; text separators (`=`, `→`, `of`) go between value-side elements.
+The row, pill, add-row, gear and settings-band classes ship with `blockr.ui::controls_dep()`. Which class to use for what: [the design system](https://bristolmyerssquibb.github.io/blockr.ui/articles/design-system.html) in blockr.ui.
 
 ## Performance checklist
 
